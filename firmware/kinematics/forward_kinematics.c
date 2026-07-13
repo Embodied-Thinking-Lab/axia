@@ -8,12 +8,11 @@
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
 #endif
-#define DEG_TO_RAD(a) ((a) * M_PI / 180.0)
+#define DEG_TO_RAD(angle) ((angle) * M_PI / 180.0)
 
-double tool_z = DEG_TO_RAD(0);
-double tool_y = DEG_TO_RAD(0);
-double tool_x = DEG_TO_RAD(0);
-
+// double tool_z = DEG_TO_RAD(0);
+// double tool_y = DEG_TO_RAD(0);
+// double tool_x = DEG_TO_RAD(0);
 
 matrix create_matrix(int rows, int cols) {
     matrix mat;
@@ -131,9 +130,9 @@ matrix rotation_matrix(double degZ, double degY, double degX) {
     res.m[2 * res.cols + 0] = -(sin(Y));
     res.m[2 * res.cols + 1] = cos(Y) * sin(X);
     res.m[2 * res.cols + 2] = cos(Y) * cos(X);
-    res.m[0 * res.cols + 3] = tool_x;
-    res.m[1 * res.cols + 3] = tool_y;
-    res.m[2 * res.cols + 3] = tool_z;
+    res.m[0 * res.cols + 3] = 0;
+    res.m[1 * res.cols + 3] = 0;
+    res.m[2 * res.cols + 3] = 0;
     res.m[3 * res.cols + 0] = 0;
     res.m[3 * res.cols + 1] = 0;
     res.m[3 * res.cols + 2] = 0;
@@ -172,16 +171,16 @@ matrix get_link_matrix(double r, double alpha, double d, double theta) {
     return res;
 }
 
-matrix forward_kinematics(double J1, double J2, double J3, double J4, double J5, double J6, Vector3 *positions) {
+matrix forward_kinematics(double joints[6], Vector3 *positions) {
 
     double DH_PARAM[6][4] = {
-    // 	r,     alph, 	   d, 	   theta
-        {0,   	DEG_TO_RAD(0),   87,    DEG_TO_RAD(J1)},
-        {0,   	DEG_TO_RAD(0),  97,     	DEG_TO_RAD(J2+90)},
-        {280, 	DEG_TO_RAD(90),   0,    DEG_TO_RAD(J3)},
-        {0, 	DEG_TO_RAD(0),  25.5,   DEG_TO_RAD(J4-90)},
-        {0,   	DEG_TO_RAD(0),  220.5,  	DEG_TO_RAD(J5-90)},
-        {0,   	DEG_TO_RAD(-90),  70,   DEG_TO_RAD(J6+90)}
+    // 	 r, alph, 	       d,       theta
+	    {0, DEG_TO_RAD(0), 87, DEG_TO_RAD(joints[0])},
+	    {0, DEG_TO_RAD(90), 97, DEG_TO_RAD(joints[1])},
+	    {280, DEG_TO_RAD(0), 0, DEG_TO_RAD(joints[2]+90)},
+	    {0, DEG_TO_RAD(-90), 25.5, DEG_TO_RAD(joints[3])},
+	    {0, DEG_TO_RAD(-90), 220.5, DEG_TO_RAD(joints[4])},
+	    {0, DEG_TO_RAD(90), 70, DEG_TO_RAD(joints[5]-90)}
     };
 
     matrix T_links[6];
@@ -197,25 +196,24 @@ matrix forward_kinematics(double J1, double J2, double J3, double J4, double J5,
 
     T_cum[0] = T_links[0];
 
-    for (int i=0; i<6; i++) {
+    for (int i=1; i<6; i++) {
     	T_cum[i] = matrix_multiply(T_cum[i-1], T_links[i]);
     }
 
     if (positions != NULL) {
-    	for (int i=0; i<6; i++) {
-   			positions[i+1].x = (float)T_cum[i].m[0 * T_cum[i].cols + 3];
-    		positions[i+1].y = (float)T_cum[i].m[1 * T_cum[i].cols + 3];
-     		positions[i+1].z = (float)T_cum[i].m[2 * T_cum[i].cols + 3];
+    	for (int i=1; i<6; i++) {
+   			positions[i].x = (float)T_cum[i].m[0 * T_cum[i].cols + 3];
+    		positions[i].y = (float)T_cum[i].m[1 * T_cum[i].cols + 3];
+     		positions[i].z = (float)T_cum[i].m[2 * T_cum[i].cols + 3];
      	}
     }
 
     matrix T_final = T_cum[5];
 
-
-   	printf("X: %lf\n", T_final.m[0 * T_final.cols + 1]);
-   	printf("Y: %lf\n", T_final.m[1 * T_final.cols + 1]);
-   	printf("Z: %lf\n", T_final.m[2 * T_final.cols + 1]);
-
+    for (int i=0; i<6; i++) {
+        printf("matrix, %d\n", i+1); print_matrix(T_cum[i]);
+    }
+    printf("matrix, %d\n", 7); print_matrix(T_final);
 
     for (int i=0; i<5; i++) {
     	free(T_cum[i].m);
@@ -227,3 +225,30 @@ matrix forward_kinematics(double J1, double J2, double J3, double J4, double J5,
 
     return T_final;
 }
+
+// int main() {
+// 	double R_z[3][3] = {0};
+//     double R_y[3][3] = {0};
+//     double R_x[3][3] = {0};
+
+//     rotation(0, 0, R_z);
+//     rotation(1, 0, R_y);
+//     rotation(2, 0, R_x);
+
+//     matrix tool_interface = rotation_matrix(0, 0, 0);
+//     print_matrix(tool_interface);
+
+//     matrix tool_frame = create_matrix(4, 4);
+//     tool_frame.m[0 * tool_frame.cols + 3] = tool_x;
+//     tool_frame.m[1 * tool_frame.cols + 3] = tool_z;
+//     tool_frame.m[2 * tool_frame.cols + 3] = tool_y;
+
+//     Vector3 *positions;
+//     matrix mat = forward_kinematics(0, 0, 0, 0, 0, 0, positions);
+//     print_matrix(mat);
+
+//     matrix end_affector = matrix_multiply(mat, tool_interface);
+//     printf("END AFFECTOR: \n"); print_matrix(end_affector);
+
+//     return 0;
+// }

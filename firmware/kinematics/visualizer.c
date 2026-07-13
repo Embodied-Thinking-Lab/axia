@@ -12,7 +12,7 @@
 
 
 
-void compute_fk(float joints[6], Vector3 points[7]) {
+void compute_fk(double joints[6], Vector3 points[7]) {
 	double tool_z = DEG_TO_RAD(0);
 	double tool_y = DEG_TO_RAD(0);
 	double tool_x = DEG_TO_RAD(0);
@@ -27,7 +27,7 @@ void compute_fk(float joints[6], Vector3 points[7]) {
         tool_frame.m[2 * tool_frame.cols + 3] = tool_y;
     }
 
-    matrix mat = forward_kinematics(joints[0], joints[1], joints[2], joints[3], joints[4], joints[5], points);
+    matrix mat = forward_kinematics(joints, points);
     matrix end_effector = matrix_multiply(mat, tool_interface);
 
     free_matrix(tool_interface);
@@ -49,18 +49,13 @@ int main(void) {
 
     DisableCursor();
 
-    float joint_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    double joint_angles[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     Vector3 link_positions[7];
 
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
         UpdateCamera(&camera, CAMERA_THIRD_PERSON);
-
-        if (IsKeyDown(KEY_RIGHT)) joint_angles[0] += 2.0;
-        if (IsKeyDown(KEY_LEFT))  joint_angles[0] -= 2.0;
-        if (IsKeyDown(KEY_UP))    joint_angles[1] += 2.0;
-        if (IsKeyDown(KEY_DOWN))  joint_angles[1] -= 2.0;
 
         compute_fk(joint_angles, link_positions);
 
@@ -77,7 +72,6 @@ int main(void) {
                 DrawSphere(link_positions[6], 8.0f, GREEN);
 
             EndMode3D();
-            DrawText("Use Left/Right/Up/Down Arrow Keys to rotate Joints 1 & 2", 20, 20, 20, DARKGRAY);
         EndDrawing();
     }
 
