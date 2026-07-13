@@ -110,7 +110,7 @@ void rotation(int type, double a, double mat[3][3]) {
     }
 }
 
-matrix rotation_matrix(double degZ, double degY, double degX) {
+matrix rotation_matrix(double degZ, double degY, double degX, double z, double y, double x) {
     double Z = DEG_TO_RAD(degZ);
     double Y = DEG_TO_RAD(degY);
     double X = DEG_TO_RAD(degX);
@@ -130,9 +130,9 @@ matrix rotation_matrix(double degZ, double degY, double degX) {
     res.m[2 * res.cols + 0] = -(sin(Y));
     res.m[2 * res.cols + 1] = cos(Y) * sin(X);
     res.m[2 * res.cols + 2] = cos(Y) * cos(X);
-    res.m[0 * res.cols + 3] = 0;
-    res.m[1 * res.cols + 3] = 0;
-    res.m[2 * res.cols + 3] = 0;
+    res.m[0 * res.cols + 3] = x;
+    res.m[1 * res.cols + 3] = y;
+    res.m[2 * res.cols + 3] = z;
     res.m[3 * res.cols + 0] = 0;
     res.m[3 * res.cols + 1] = 0;
     res.m[3 * res.cols + 2] = 0;
@@ -174,14 +174,16 @@ matrix get_link_matrix(double r, double alpha, double d, double theta) {
 matrix forward_kinematics(double joints[6], Vector3 *positions) {
 
     double DH_PARAM[6][4] = {
-    // 	 r, alph, 	       d,       theta
-	    {0, DEG_TO_RAD(0), 87, DEG_TO_RAD(joints[0])},
-	    {0, DEG_TO_RAD(90), 97, DEG_TO_RAD(joints[1])},
-	    {280, DEG_TO_RAD(0), 0, DEG_TO_RAD(joints[2]+90)},
-	    {0, DEG_TO_RAD(-90), 25.5, DEG_TO_RAD(joints[3])},
-	    {0, DEG_TO_RAD(-90), 220.5, DEG_TO_RAD(joints[4])},
-	    {0, DEG_TO_RAD(90), 70, DEG_TO_RAD(joints[5]-90)}
+    // 	 r,   alpha, 	        d,     theta
+	    {0,   DEG_TO_RAD(0),    87,    DEG_TO_RAD(joints[0])},
+	    {0,   DEG_TO_RAD(90),   97,    DEG_TO_RAD(joints[1])},
+	    {280, DEG_TO_RAD(0),    0,     DEG_TO_RAD(joints[2]+90)},
+	    {0,   DEG_TO_RAD(-90),  25.5,  DEG_TO_RAD(joints[3])},
+	    {0,   DEG_TO_RAD(-90),  220.5, DEG_TO_RAD(joints[4])},
+	    {0,   DEG_TO_RAD(90),   70,    DEG_TO_RAD(joints[5]-90)}
     };
+
+
 
     matrix T_links[6];
     for (int i=0; i<6; i++) {

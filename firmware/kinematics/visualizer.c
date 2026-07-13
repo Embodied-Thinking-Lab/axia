@@ -10,14 +10,12 @@
 #endif
 #define DEG_TO_RAD(a) ((a) * M_PI / 180.0)
 
-
-
 void compute_fk(double joints[6], Vector3 points[7]) {
-	double tool_z = DEG_TO_RAD(0);
-	double tool_y = DEG_TO_RAD(0);
-	double tool_x = DEG_TO_RAD(0);
+	double tool_z = 90;
+	double tool_y = 0;
+	double tool_x = 0;
 
-    matrix tool_interface = rotation_matrix(0, 0, 0);
+    matrix tool_interface = rotation_matrix(0, 0, 0, tool_z, tool_y, tool_x);
 
     matrix tool_frame = create_matrix(4, 4);
 
@@ -29,6 +27,7 @@ void compute_fk(double joints[6], Vector3 points[7]) {
 
     matrix mat = forward_kinematics(joints, points);
     matrix end_effector = matrix_multiply(mat, tool_interface);
+    printf("EE: \n"); print_matrix(end_effector);
 
     free_matrix(tool_interface);
     free_matrix(tool_frame);
@@ -70,7 +69,7 @@ int main(void) {
                     DrawSphere(link_positions[i], 6.0f, BLUE);
                 }
                 DrawSphere(link_positions[6], 8.0f, GREEN);
-
+                
             EndMode3D();
         EndDrawing();
     }

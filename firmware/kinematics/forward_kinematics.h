@@ -23,7 +23,7 @@ matrix matrix_multiply(matrix mat1, matrix mat2);
 void get_euler_angles(double rm[3][3], double euler_angles[3]);
 void print_matrix(matrix mat);
 void rotation(int type, double a, double mat[3][3]);
-matrix rotation_matrix(double degZ, double degY, double degX);
+matrix rotation_matrix(double degZ, double degY, double degX, double z, double y, double x);
 matrix get_link_matrix(double r, double alpha, double d, double theta);
 matrix forward_kinematics(double joints[6], Vector3 *positions);
 
