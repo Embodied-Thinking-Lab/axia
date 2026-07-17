@@ -1,131 +1,201 @@
 use gtk::prelude::*;
 use relm4::prelude::*;
 
-#[derive(Clone, Copy, Debug)] 
-struct RobotState {
+const JOINT1_DEFAULT: f64 = 0.0;
+const JOINT2_DEFAULT: f64 = 0.0;
+const JOINT3_DEFAULT: f64 = 0.0;
+const JOINT4_DEFAULT: f64 = 0.0;
+const JOINT5_DEFAULT: f64 = 0.0;
+const JOINT6_DEFAULT: f64 = 0.0;
+
+
+struct App {
     joint1: f64,
     joint2: f64,
     joint3: f64,
     joint4: f64,
     joint5: f64,
     joint6: f64,
-}
 
-impl Default for RobotState {
-    fn default() -> Self {
-        Self {
-            joint1: 90.0,
-            joint2: 90.0,
-            joint3: 90.0,
-            joint4: 90.0,
-            joint5: 90.0,
-            joint6: 90.0,
-        }
-    }
-}
-
-// holds current state and default state (for reset btn)
-struct AppModel {
-    current: RobotState,
-    defaults: RobotState,
 }
 
 #[derive(Debug)]
-enum AppMsg {
-    UpdateAngle1(f64),
-    UpdateAngle2(f64),
-    UpdateAngle3(f64),
-    UpdateAngle4(f64),
-    UpdateAngle5(f64),
-    UpdateAngle6(f64),
+enum Msg {
+    Joint1Slider(f64),
+    Joint2Slider(f64), 
+    Joint3Slider(f64),
+    Joint4Slider(f64), 
+    Joint5Slider(f64), 
+    Joint6Slider(f64),
     Reset,
 }
 
 #[relm4::component]
-impl SimpleComponent for AppModel {
-    type Init = f64;
-    type Input = AppMsg;
+impl SimpleComponent for App {
+    type Init = ();
+    type Input = Msg;
     type Output = ();
 
     view! {
         gtk::Window {
-            set_title: Some("AXIA-OS Control Panel"),
-            set_default_size: (300, 150),
+            set_title: Some("Slider Reset Example"),
+            set_default_size: (300, 100),
 
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
-                set_spacing: 10,
-                set_margin_all: 15,
+                set_spacing: 12,
+                set_margin_all: 12,
 
-                gtk::Box {
+                #[name(slider1)]
+                gtk::Scale {
                     set_orientation: gtk::Orientation::Horizontal,
-                    set_hexpand: true,
-        
-                
-                    gtk::Scale::with_range(gtk::Orientation::Horizontal, -180.0, 180.0, 1.0) {
-                        set_hexpand: true,
-                        set_draw_value: false,
+                    set_range: (-180.0, 180.0),
+                    set_draw_value: true,
+                    
 
-               
-                        connect_value_changed[sender] => move |scale| {
-                            sender.input(AppMsg::UpdateAngle1(scale.value()));
-                        }
-                    },
+                    #[watch]
+                    set_value: model.joint1,
+
+                    connect_value_changed[sender] => move |scale| {
+                        sender.input(Msg::Joint1Slider(scale.value()));
+                    }
                 },
 
+                #[name(slider2)]
+                gtk::Scale {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_range: (-180.0, 180.0),
+                    set_draw_value: true,
+
+                    #[watch]
+                    set_value: model.joint2,
+
+                    connect_value_changed[sender] => move |scale| {
+                        sender.input(Msg::Joint2Slider(scale.value()));
+                    }
+                },
+
+
+                #[name(slider3)]
+                gtk::Scale {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_range: (-180.0, 180.0),
+                    set_draw_value: true,
+
+                    #[watch]
+                    set_value: model.joint3,
+
+                    connect_value_changed[sender] => move |scale| {
+                        sender.input(Msg::Joint3Slider(scale.value()));
+                    }
+                },
+
+
+                #[name(slider4)]
+                gtk::Scale {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_range: (-180.0, 180.0),
+                    set_draw_value: true,
+
+                    #[watch]
+                    set_value: model.joint4,
+
+                    connect_value_changed[sender] => move |scale| {
+                        sender.input(Msg::Joint4Slider(scale.value()));
+                    }
+                },
+
+
+                #[name(slider5)]
+                gtk::Scale {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_range: (-180.0, 180.0),
+                    set_draw_value: true,
+
+                    #[watch]
+                    set_value: model.joint5,
+
+                    connect_value_changed[sender] => move |scale| {
+                        sender.input(Msg::Joint5Slider(scale.value()));
+                    }
+                },
+
+
+                #[name(slider6)]
+                gtk::Scale {
+                    set_orientation: gtk::Orientation::Horizontal,
+                    set_range: (-180.0, 180.0),
+                    set_draw_value: true,
+
+                    #[watch]
+                    set_value: model.joint6,
+
+                    connect_value_changed[sender] => move |scale| {
+                        sender.input(Msg::Joint6Slider(scale.value())); }
+                },
+
+
+
+
+
+
+
                 gtk::Button {
-                    set_label: "Reset to Default Positions",
-                    connect_clicked => AppMsg::Reset,
+                    set_label: "Reset",
+
+                    connect_clicked[sender] => move |_| {
+                        sender.input(Msg::Reset);
+                    }
                 }
             }
         }
     }
 
-fn init(
-        init_value: Self::Init, 
+    fn init(
+        _: (),
         root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        // create the default state 
-        let defaults = RobotState::default();
-
-        // create and init current state
-        let current = RobotState {
-            joint1: init_value,
-            joint2: init_value,
-            joint3: init_value,
-            joint4: init_value,
-            joint5: init_value,
-            joint6: init_value,
+        let model = App {
+            joint1: JOINT1_DEFAULT,
+            joint2: JOINT2_DEFAULT,
+            joint3: JOINT3_DEFAULT,
+            joint4: JOINT4_DEFAULT,
+            joint5: JOINT5_DEFAULT,
+            joint6: JOINT6_DEFAULT,
         };
 
-        // init AppModel
-        let model = AppModel { current, defaults };
         let widgets = view_output!();
 
-        ComponentParts { model, widgets }
+        ComponentParts {
+            model,
+            widgets,
+        }
     }
 
-    // handle incoming UI msgs
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
-        match msg {
-            AppMsg::UpdateAngle1(val) => self.current.joint1 += val,
-            AppMsg::UpdateAngle2(val) => self.current.joint2 += val,
-            AppMsg::UpdateAngle3(val) => self.current.joint3 += val,
-            AppMsg::UpdateAngle4(val) => self.current.joint4 += val,
-            AppMsg::UpdateAngle5(val) => self.current.joint5 += val,
-            AppMsg::UpdateAngle6(val) => self.current.joint6 += val,
+    fn update(&mut self, msg: Msg, _: ComponentSender<Self>) {
+    match msg {
+        Msg::Joint1Slider(value) => self.joint1 = value,
+        Msg::Joint2Slider(value) => self.joint2 = value,
+        Msg::Joint3Slider(value) => self.joint3 = value,
+        Msg::Joint4Slider(value) => self.joint4 = value,
+        Msg::Joint5Slider(value) => self.joint5 = value,
+        Msg::Joint6Slider(value) => self.joint6 = value,
+        
+        Msg::Reset => {
+            self.joint1 = JOINT1_DEFAULT;
+            self.joint2 = JOINT2_DEFAULT;
+            self.joint3 = JOINT3_DEFAULT;
+            self.joint4 = JOINT4_DEFAULT;
+            self.joint5 = JOINT5_DEFAULT;
+            self.joint6 = JOINT6_DEFAULT;
 
-
-
-            AppMsg::Reset => {
-                self.current = self.defaults;
-            }, 
         }
     }
 }
+}
 
 fn main() {
-    let app = RelmApp::new("com.axia.control");
-    app.run::<AppModel>(0.0);
+    let app = RelmApp::new("com.example.slider-reset");
+    app.run::<App>(());
 }
