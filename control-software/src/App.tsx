@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+import { JointSlider } from "./components/JointSlider";
+
+interface JointConstraints {
+	min: number;
+	max: number;
+}
 
 function App() {
 	const [joint1, setJoint1] = useState(0);
@@ -10,24 +16,6 @@ function App() {
 	const [joint5, setJoint5] = useState(0);
 	const [joint6, setJoint6] = useState(0);
 
-	const [joint1Input, setJoint1Input] = useState("0");
-
-	useEffect(() => {
-		setJoint1Input(joint1.toString());
-	}, [joint1]);
-
-	const handleTextInput = (val: string) => {
-		setJoint1Input(val); 
-
-		if (val === "" || val === "-" || val === "-0") return;
-
-		const num = Number(val);
-		if (!isNaN(num) && num >= -180 && num <= 180) {
-			updateJoint(1, num);
-		}
-	};
-
-
 	const stateSetters: Record<number, (v: number) => void> = { 
     	1: setJoint1,
 		2: setJoint2,
@@ -36,6 +24,39 @@ function App() {
 		5: setJoint5,
 		6: setJoint6,
   	}
+
+	const jointValues: Record<number, number> = {
+		1: joint1,
+		2: joint2,
+		3: joint3,
+		4: joint4,
+		5: joint5,
+		6: joint6,
+	}
+
+	const jointConstraints: JointConstraints[] = [
+		{min: -180, max: 180},
+		{min: -180, max: 180},
+		{min: -180, max: 180},
+		{min: -180, max: 180},
+		{min: -180, max: 180},
+		{min: -180, max: 180},
+	]
+
+	const defaultJointAngles: Record<number, number> = {
+		1: 0,
+		2: 0,
+		3: 0,
+		4: 0,
+		5: 0,
+		6: 0,
+	}
+
+	const resetJoints = () => {
+		for (let id = 1; id <= 6; id++) {
+       		updateJoint(id, defaultJointAngles[id]);
+    	}
+	}
 
 	async function updateJoint(jointId: number, angle: number) {	
 		try {
@@ -48,30 +69,33 @@ function App() {
 	}
 
 	return (
-		<main className="container">
+		<main className="flex gap-1 ">
+			<div>
+				{[1, 2, 3, 4, 5, 6].map((id) => (
+					<JointSlider
+						key={id}
+						jointId={id}
+						label={`J${id}`}
+						value={jointValues[id]}
+						min={jointConstraints[id-1].min}
+						max={jointConstraints[id-1].max}
+						onChange={updateJoint}
 
-
-			<div className="slider-container flex items-center gap-2">
-				<label className="block text-sm font-medium text-heading">J1</label>
-				<input 
-					type="range"
-					min="-180" 
-					max="180" 
-					value={joint1}
-					onChange={(e) => updateJoint(1, Number(e.target.value))}
-					className="w-100 mr-2 h-2 bg-white rounded-full appearance-none cursor-pointer"
-				/>
-				<div className="border-gray-50">
-					<label>θ:</label> 
-					<input 
-						className="ml-1 w-[2.5rem]" 
-						value={joint1Input} 
-						onChange={(e) => handleTextInput(e.target.value)}
 					/>
-				</div>
+				))}
 			</div>
-
-
+		
+			<button 
+				type="button" 
+				className="
+				text-red-700 bg-neutral-primary border hover:border-red-700 
+				hover:bg-red-700 hover:text-white rounded-sm font-medium leading-5 
+				rounded-base text-sm px-3 py-2 focus:outline-none cursor-pointer
+				"
+				onClick={() => resetJoints()}
+			>
+					Reset
+			</button>
 		</main>
 	);
 }
