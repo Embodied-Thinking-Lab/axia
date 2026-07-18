@@ -65,7 +65,14 @@ function App() {
 		} catch(err) {
 			console.error("Failed to move joint:", err);
 		}
+	}
 
+	async function compute_FK_ffi() {
+		try {
+			
+		} catch(err) {
+			console.log("Failed to compute FK:", err);
+		}
 	}
 
 	return (
