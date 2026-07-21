@@ -1,5 +1,4 @@
 #include "forward_kinematics.h"
-#include "raylib.h"
 #include <err.h>
 #include <math.h>
 #include <stdio.h>

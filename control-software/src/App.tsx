@@ -8,6 +8,12 @@ interface JointConstraints {
 	max: number;
 }
 
+interface Vector3 {
+	x: number,
+	y: number,
+	z: number,
+}
+
 function App() {
 	const [joint1, setJoint1] = useState(0);
 	const [joint2, setJoint2] = useState(0);
@@ -15,6 +21,22 @@ function App() {
 	const [joint4, setJoint4] = useState(0);
 	const [joint5, setJoint5] = useState(0);
 	const [joint6, setJoint6] = useState(0);
+
+	const [jointAngles, setJointAngles] = useState<number[]>([0,0,0,0,0,0]);
+
+	const [fkMatrix, setFkMatrix] = useState<number[]>([]);
+
+	const defaultPositions: Vector3[] = [
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+        { x: 0, y: 0, z: 0 },
+    ];
+
+	const tiVector: Vector3 = { x: 0, y: 0, z: 90 };
 
 	const stateSetters: Record<number, (v: number) => void> = { 
     	1: setJoint1,
@@ -61,15 +83,31 @@ function App() {
 	async function updateJoint(jointId: number, angle: number) {	
 		try {
 			const returnAngle = await invoke<number>("set_joint", { jointId, angle});
+			await updateFK();
 			stateSetters[jointId](returnAngle);
 		} catch(err) {
 			console.error("Failed to move joint:", err);
 		}
 	}
 
-	async function compute_FK_ffi() {
+	async function updateFK() {
 		try {
-			
+			const resMat = await invoke<number[]>("calculate_fk", {
+				joints: jointAngles,
+				positions: defaultPositions,
+				tiVector: tiVector,
+			});
+
+			setFkMatrix(resMat);
+	
+			console.log("C FK OUTPUT (4x4):");
+			for (let i = 0; i < 4; i++) {
+				const row = resMat
+					.slice(i * 4, i * 4 + 4)
+					.map((val) => val.toFixed(3).padStart(8, " "))
+					.join(" ");
+				console.log(`[ ${row} ]`);
+			}
 		} catch(err) {
 			console.log("Failed to compute FK:", err);
 		}
@@ -99,7 +137,10 @@ function App() {
 				hover:bg-red-700 hover:text-white rounded-sm font-medium leading-5 
 				rounded-base text-sm px-3 py-2 focus:outline-none cursor-pointer
 				"
-				onClick={() => resetJoints()}
+				onClick={() => {
+					resetJoints();
+					updateFK();
+				}}
 			>
 					Reset
 			</button>
