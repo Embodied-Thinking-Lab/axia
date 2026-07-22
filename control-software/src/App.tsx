@@ -15,13 +15,6 @@ interface Vector3 {
 }
 
 function App() {
-	const [joint1, setJoint1] = useState(0);
-	const [joint2, setJoint2] = useState(0);
-	const [joint3, setJoint3] = useState(0);
-	const [joint4, setJoint4] = useState(0);
-	const [joint5, setJoint5] = useState(0);
-	const [joint6, setJoint6] = useState(0);
-
 	const [jointAngles, setJointAngles] = useState<number[]>([0,0,0,0,0,0]);
 
 	const [fkMatrix, setFkMatrix] = useState<number[]>([]);
@@ -37,24 +30,6 @@ function App() {
     ];
 
 	const tiVector: Vector3 = { x: 0, y: 0, z: 90 };
-
-	const stateSetters: Record<number, (v: number) => void> = { 
-    	1: setJoint1,
-		2: setJoint2,
-		3: setJoint3,
-		4: setJoint4,
-		5: setJoint5,
-		6: setJoint6,
-  	}
-
-	const jointValues: Record<number, number> = {
-		1: joint1,
-		2: joint2,
-		3: joint3,
-		4: joint4,
-		5: joint5,
-		6: joint6,
-	}
 
 	const jointConstraints: JointConstraints[] = [
 		{min: -180, max: 180},
@@ -84,7 +59,7 @@ function App() {
 		try {
 			const returnAngle = await invoke<number>("set_joint", { jointId, angle});
 			await updateFK();
-			stateSetters[jointId](returnAngle);
+			
 		} catch(err) {
 			console.error("Failed to move joint:", err);
 		}
@@ -121,10 +96,10 @@ function App() {
 						key={id}
 						jointId={id}
 						label={`J${id}`}
-						value={jointValues[id]}
+						value={jointAngles[id-1]}
 						min={jointConstraints[id-1].min}
 						max={jointConstraints[id-1].max}
-						onChange={updateJoint}
+						onChange={() => updateJoint(id, jointAngles[id-1])}
 
 					/>
 				))}
