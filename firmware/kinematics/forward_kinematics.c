@@ -165,16 +165,16 @@ matrix get_link_matrix(double r, double alpha, double d, double theta) {
     return res;
 }
 
-matrix forward_kinematics(double joints[6], Vector3 *positions) {
+matrix forward_kinematics(double joints[6], Vector3 *positions, double DH_PARAM[6][4]) {
 
-    double DH_PARAM[6][4] = {
-        // 	 r,   alpha, 	        d,     theta
-        {0, DEG_TO_RAD(0), 87, DEG_TO_RAD(joints[0])},
-        {0, DEG_TO_RAD(90), 97, DEG_TO_RAD(joints[1])},
-        {280, DEG_TO_RAD(0), 0, DEG_TO_RAD(joints[2] + 90)},
-        {0, DEG_TO_RAD(-90), 25.5, DEG_TO_RAD(joints[3])},
-        {0, DEG_TO_RAD(-90), 220.5, DEG_TO_RAD(joints[4])},
-        {0, DEG_TO_RAD(90), 70, DEG_TO_RAD(joints[5] - 90)}};
+    //     double DH_PARAM[6][4] = {
+    //         // 	 r,   alpha, 	        d,     theta
+    //         {0, DEG_TO_RAD(0), 87, DEG_TO_RAD(joints[0])},
+    //         {0, DEG_TO_RAD(90), 97, DEG_TO_RAD(joints[1])},
+    //         {280, DEG_TO_RAD(0), 0, DEG_TO_RAD(joints[2] + 90)},
+    //         {0, DEG_TO_RAD(-90), 25.5, DEG_TO_RAD(joints[3])},
+    //         {0, DEG_TO_RAD(-90), 220.5, DEG_TO_RAD(joints[4])},
+    //         {0, DEG_TO_RAD(90), 70, DEG_TO_RAD(joints[5] - 90)}};
 
     matrix T_links[6];
     for (int i = 0; i < 6; i++) {
@@ -226,10 +226,10 @@ matrix compute_TI(Vector3 TI_vector) {
     return tool_interface;
 }
 
-void compute_FK_ffi(double joints[6], Vector3 positions[7], Vector3 TI_vector, double *out_matrix_16) {
+void compute_FK_ffi(double joints[6], Vector3 positions[7], Vector3 TI_vector, double DH_Param[6][4], double *out_matrix_16) {
 
     matrix tool_interface = compute_TI(TI_vector);
-    matrix mat = forward_kinematics(joints, positions);
+    matrix mat = forward_kinematics(joints, positions, DH_Param);
     matrix end_effector = matrix_multiply(mat, tool_interface);
 
     if (end_effector.m != NULL && out_matrix_16 != NULL) {
