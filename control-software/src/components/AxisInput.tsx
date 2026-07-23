@@ -8,7 +8,7 @@ interface TextInputProp {
   	onChange: (axis: keyof Vector3, val: number) => void; 
 }
 
-export function InputField({ label, type, onChange }: TextInputProp) {
+export function AxisInput({ label, type, onChange }: TextInputProp) {
 	const [textInput, setTextInput] = useState("0");
 
 

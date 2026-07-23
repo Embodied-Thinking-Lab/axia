@@ -23,6 +23,6 @@ matrix rotation_matrix(double degZ, double degY, double degX, double z, double y
 matrix get_link_matrix(double r, double alpha, double d, double theta);
 // matrix forward_kinematics(double joints[6], Vector3 *positions);
 matrix compute_TI(Vector3 TI_vector);
-void compute_FK_ffi(double joints[6], Vector3 positions[7], Vector3 TI_vector, double DH_Param[6][4], double *out_matrix_16);
+void compute_FK_ffi(Vector3 positions[7], Vector3 TI_vector, double DH_Param[6][4], double *out_matrix_16);
 
 #endif

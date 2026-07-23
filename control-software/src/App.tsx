@@ -1,21 +1,60 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { JointSlider } from "./components/JointSlider";
-import { InputField } from "./components/InputField";
+import { AxisInput } from "./components/AxisInput";
+import { DHInputField } from "./components/DHInputField";
 import { JointConstraints, Vector3 } from "./props"
 
 
 
 function App() {
-	const [jointAngles, setJointAngles] = useState<number[]>([0,0,0,0,0,0]);
-	const [TIVector, setTIVector] = useState<Vector3>({ x:0, y:0, z:90 });
-	const axes = Object.keys(TIVector) as Array<keyof Vector3>;
+	
 
+	// type declerations
+	// positions[7]
+	// type SevenVectors = [ Vector3, Vector3, Vector3, Vector3, Vector3, Vector3, Vector3 ]
+	// dh_params[6][4]
+	// type DHRow = [number, number, number, number];
+
+
+	const degToRad = (degrees: number): number => {
+  		return degrees * (Math.PI / 180);
+	};
+
+
+	// const declerations
+	const [jointAngles, setJointAngles] = useState([0,0,0,0,0,0]);
+	const [tiVector, setTIVector] = useState<Vector3>({ x:0, y:0, z:90 });
+	const axes = Object.keys(tiVector) as Array<keyof Vector3>;
 	const [fkMatrix, setFkMatrix] = useState<number[]>([]);
+	const [dhParams, setDHParams] = useState([	
+		[0, degToRad(0), 87, degToRad(jointAngles[0])],
+    	[0, degToRad(90), 97, degToRad(jointAngles[1])],
+    	[280, degToRad(0), 0, degToRad(jointAngles[2] + 90)],
+    	[0, degToRad(-90), 25.5, degToRad(jointAngles[3])],
+    	[0, degToRad(-90), 220.5, degToRad(jointAngles[4])],
+    	[0, degToRad(90), 70, degToRad(jointAngles[5] - 90)]
+	])
 
-	const defaultPositions: Vector3[] = Array(7).fill({ x: 0, y: 0, z: 0 })
+	// const DHParams = useMemo(() => [
+    	// [0, degToRad(0), 87, degToRad(jointAngles[0])],
+    	// [0, degToRad(90), 97, degToRad(jointAngles[1])],
+    	// [280, degToRad(0), 0, degToRad(jointAngles[2] + 90)],
+    	// [0, degToRad(-90), 25.5, degToRad(jointAngles[3])],
+    	// [0, degToRad(-90), 220.5, degToRad(jointAngles[4])],
+    	// [0, degToRad(90), 70, degToRad(jointAngles[5] - 90)],
+	// ], [jointAngles]);
 
+	const defaultPositions = useMemo(() => [
+	  	{ x: 0, y: 0, z: 0 },
+	  	{ x: 0, y: 0, z: 0 },
+	  	{ x: 0, y: 0, z: 0 },
+	  	{ x: 0, y: 0, z: 0 },
+	  	{ x: 0, y: 0, z: 0 },
+	  	{ x: 0, y: 0, z: 0 },
+	  	{ x: 0, y: 0, z: 0 },
+	], [])
 	const jointConstraints: JointConstraints[] = [
 		{min: -180, max: 180},
 		{min: -180, max: 180},
@@ -25,14 +64,14 @@ function App() {
 		{min: -180, max: 180},
 	]
 
-	const defaultJointAngles: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }
 
-	const updateFK = useCallback(async (currentJoints = jointAngles, currentTI = TIVector) => {
+	const updateFK = useCallback(async (currentPositions = defaultPositions, currentTI = tiVector, currentDHParams = dhParams) => {
 		try {
+			console.log(JSON.stringify(currentPositions));
 			const resMat = await invoke<number[]>("calculate_fk", {
-				joints: currentJoints,
-				positions: defaultPositions,
+				positions: currentPositions,
 				tiVector: currentTI,
+				dhParams: currentDHParams,
 			});
 
 			setFkMatrix(resMat);
@@ -48,12 +87,12 @@ function App() {
 		} catch(err) {
 			console.log("Failed to compute FK:", err);
 		}
-	}, [jointAngles, TIVector])
+	}, [defaultPositions, tiVector, dhParams])
 
 
 	useEffect(() => {
-		updateFK(jointAngles, TIVector);
-	}, [jointAngles, TIVector]);
+		updateFK(defaultPositions, tiVector, dhParams);
+	}, [tiVector, dhParams]);
 
 
 	function updateTIVector(axis: keyof Vector3, val: number) {
@@ -74,13 +113,24 @@ function App() {
 		}
 	}
 
+	const updateDH = (row: number, col: number, value: number) => {
+		if (col == 1 || col == 2) value = degToRad(value);
+    	setDHParams(prev =>
+        	prev.map((r, i) =>
+            	i === row
+                ? r.map((v, j) => (j === col ? value : v))
+                : r
+        	)
+    	);
+	};
+
 	const homeJoints = async () => {
 		const homed = [0, 0, 0, 0, 0, 0];
 		setJointAngles(homed);
 		await Promise.all(
 			[1, 2, 3, 4, 5, 6].map((id) => invoke("set_joint", { jointId: id, angle: 0 }))
     	);
-        updateFK(homed, TIVector);
+        updateFK(homed, tiVector);
 	}
 
 	return (
@@ -92,18 +142,18 @@ function App() {
 				Tool Interface Vector:	
 				<div className="w-[5rem] flex flex-row gap-2"> 	
 					{axes.map((axis) => (
-						<InputField
+						<AxisInput
 							label={`${axis.toUpperCase()}:`}
 							key={axis}	
 							type={axis}
-							value={TIVector[axis]}
+							value={tiVector[axis]}
 							onChange={updateTIVector} 
 						/>
 					))}
 					
 				</div>
 
-
+		
 				Joint Jogging:
 				<div>
 					{[1, 2, 3, 4, 5, 6].map((id) => (
@@ -130,11 +180,26 @@ function App() {
 					"
 					onClick={() => {
 						homeJoints();
-						updateFK();
 					}}
 				>
 						HOME JOINTS
-				</button>
+				</button>	
+
+				Denavit-Hartenberg Parameters
+				<div className="grid grid-cols-4">
+				{dhParams.map((row, i) => (
+					row.map((value, j) => (
+					<DHInputField 
+						key={j}
+						styling={"w-[4rem] border border-gray-800 rounded-sm px-1"}
+						row={i}
+						col={j}
+						value={value}
+						onChange={updateDH}
+					/>	
+					))
+				))}	
+				</div>
 
 			</div>
 		</main>

@@ -9,15 +9,15 @@ pub struct Vector3 {
 }
 
 extern "C" {
-    fn compute_FK_ffi(joints: *const f64, positions: *const Vector3, ti_vector: Vector3, out_matrix_16: *mut f64);
+    fn compute_FK_ffi(positions: *const Vector3, ti_vector: Vector3, dh_params: *const [f64; 4], out_matrix_16: *mut f64);
 }
 
 #[tauri::command]
-async fn calculate_fk(joints: [f64; 6], positions: [Vector3; 7], ti_vector: Vector3) -> Result<[f64; 16], String> {
+async fn calculate_fk(positions: [Vector3; 7], dh_params: [[f64; 4]; 6], ti_vector: Vector3) -> Result<[f64; 16], String> {
     let mut out_matrix = [0.0f64; 16];
 
     unsafe {
-        compute_FK_ffi(joints.as_ptr(), positions.as_ptr(), ti_vector, out_matrix.as_mut_ptr());
+        compute_FK_ffi(positions.as_ptr(), ti_vector, dh_params.as_ptr(), out_matrix.as_mut_ptr());
     }
 
     Ok(out_matrix)
