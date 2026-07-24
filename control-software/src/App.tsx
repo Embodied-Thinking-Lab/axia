@@ -121,7 +121,8 @@ function App() {
                 ? r.map((v, j) => (j === col ? value : v))
                 : r
         	)
-    	);
+		);
+		updateDH();
 	};
 
 	function updateDH() {
