@@ -5,6 +5,10 @@ import { JointSlider } from "./components/JointSlider";
 import { AxisInput } from "./components/AxisInput";
 import { DHInputField } from "./components/DHInputField";
 import { JointConstraints, Vector3 } from "./props"
+// import ModelViewer from "./components/ModelViewer"
+import { DHViewer } from "./components/DHViewer";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
 
 
 
@@ -142,8 +146,17 @@ function App() {
 	}
 
 	return (
-		<main className="flex gap-1 flex-row w-max">
-			<div></div>
+		<main className="flex gap-1 flex-row w-100vw h-100vh">
+			<div className="w-[100vw] h-[100vh]">
+				<Canvas
+					camera={{position: [3,3,5],}}
+				>
+					<ambientLight intensity={1} />
+					<directionalLight position={[5,5,5]}/>
+					<DHViewer dhParams={dhParams} />
+					<OrbitControls/>
+				</Canvas>
+			</div>
 			<div className="flex gap-1 flex-col w-max">
 
 
