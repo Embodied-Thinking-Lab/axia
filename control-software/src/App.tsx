@@ -12,9 +12,14 @@ import { OrbitControls } from "@react-three/drei";
 
 
 
+
 function App() {
 
-
+	type FKResult = [
+	    Vector3[],
+	    number[][],
+	    number[]
+	];
 	// type declerations
 	// positions[7]
 	// type SevenVectors = [ Vector3, Vector3, Vector3, Vector3, Vector3, Vector3, Vector3 ]
@@ -40,7 +45,6 @@ function App() {
     	[0, degToRad(-90), 220.5, degToRad(jointAngles[4])],
     	[0, degToRad(90), 70, degToRad(jointAngles[5] - 90)]
 	])
-
 	const [visualDHParams, setVisualDHParams] = useState([
 		[0, 0, 87, jointAngles[0]],
     	[0, 90, 97, jointAngles[1]],
@@ -49,6 +53,10 @@ function App() {
     	[0, -90, 220.5, jointAngles[4]],
     	[0, 90, 70, jointAngles[5] - 90]
 	])
+
+	const [positions, setPositions] = useState<Vector3[]>();
+	const [linkTransformations, setLinkTransformations] = useState<number[][]>();
+	const [endEffector, setEndEffector] = useState<number[]>();
 
 	const defaultPositions = useMemo(() => [
 	  	{ x: 0, y: 0, z: 0 },
@@ -70,25 +78,17 @@ function App() {
 
 	const updateFK = useCallback(async (currentPositions = defaultPositions, currentTI = tiVector, currentDHParams = dhParams) => {
 		try {
-			console.log(JSON.stringify(currentPositions));
-			const resMat = await invoke<number[]>("calculate_fk", {
+			// console.log(JSON.stringify(currentPositions));
+			const [pos, links, ee] = await invoke<FKResult>("calculate_fk", {
 				positions: currentPositions,
 				tiVector: currentTI,
 				dhParams: currentDHParams,
 			});
-
-			setFkMatrix(resMat);
-
-			console.log("C FK OUTPUT (4x4):");
-			for (let i = 0; i < 4; i++) {
-				const row = resMat
-					.slice(i * 4, i * 4 + 4)
-					.map((val) => val.toFixed(3).padStart(8, " "))
-					.join(" ");
-				console.log(`[ ${row} ]`);
-			}
+			setPositions(pos);
+			setLinkTransformations(links)
+			setEndEffector(ee);
 		} catch(err) {
-			console.log("Failed to compute FK:", err);
+			console.log("Failed to compute fk", err);
 		}
 	}, [defaultPositions, tiVector, dhParams])
 
@@ -136,7 +136,6 @@ function App() {
 			)
 		)
 	}
-
 	const homeJoints = async () => {
 		const homed = [0, 0, 0, 0, 0, 0];
 		setJointAngles(homed);
@@ -146,16 +145,32 @@ function App() {
         updateFK(homed, tiVector);
 	}
 
+	const pos: [number, number, number] = [endEffector[3], endEffector[7], endEffector[11]]
+
 	return (
 		<main className="flex gap-1 flex-row w-100vw h-100vh">
 			<div className="w-[100vw] h-[100vh]">
-				<Canvas
-					camera={{position: [3,3,5],}}
-				>
+				<Canvas camera={{ position: [600, 600, 600], fov: 60, near: 0.1, far: 5000 }}>
 					<ambientLight intensity={1} />
-					<directionalLight position={[5,5,5]}/>
-					<DHViewer dhParams={dhParams} />
-					<OrbitControls/>
+				    <directionalLight position={[5, 5, 5]} />
+
+				    <gridHelper args={[1000, 20]} />
+					<axesHelper args={[50]} />
+
+
+					<group rotation={[-Math.PI / 2, 0, Math.PI / 2]}>
+						<mesh rotation={[-Math.PI / 2, 0, 0]}>
+							<cylinderGeometry args={[10, 10, 20, 32]}/>
+							<meshStandardMaterial color="gray" />
+						</mesh>
+						<DHViewer linkTransforms={linkTransformations} />
+						<mesh position={pos}>
+							<sphereGeometry args={[10, 10, 20]}/>
+							<meshStandardMaterial color="red" />
+						</mesh>
+					</group>
+
+				    <OrbitControls target={[0, 0, 230]} />
 				</Canvas>
 			</div>
 			<div className="flex gap-1 flex-col w-max">

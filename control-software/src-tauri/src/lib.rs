@@ -12,7 +12,7 @@ pub struct Vector3 {
 
 
 extern "C" {
-    fn compute_FK_ffi(
+    fn compute_FK_FFI(
         positions: *mut Vector3,
         ti_vector: Vector3,
         dh_params: *const f64,
@@ -26,11 +26,12 @@ async fn calculate_fk(
 	mut positions: [Vector3; 7],
 	dh_params: [[f64; 4]; 6],
 	ti_vector: Vector3,
-) -> Result<([Vector; 7], [[f64; 16]; 6], [f64; 6]), String> {
-    let mut out_matrix = [0.0f64; 16];
+) -> Result<([Vector3; 7], [[f64; 16]; 6], [f64; 16]), String> {
+	let mut link_transforms = [[0.0f64; 16]; 6];
+    let mut end_effector = [0.0f64; 16];
 
     unsafe {
-        compute_FK_ffi(
+        compute_FK_FFI(
         	positions.as_mut_ptr(),
          	ti_vector,
           	dh_params.as_ptr() as *const f64,

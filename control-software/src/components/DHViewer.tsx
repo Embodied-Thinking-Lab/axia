@@ -1,18 +1,12 @@
 import { RevoluteJoint } from "./RevoluteJoint"
 
-export function DHViewer({ dhParams }) {
+export function DHViewer({linkTransforms}) {
 	return (
 		<group>
-			{dhParams.map((row: any, i: number) => (
-				<RevoluteJoint
-					key={i}
-					r={row[0]}
-					alpha={row[1]}
-					d={row[2]}
-					theta={row[3]}
-				/>
-			))
-			}
+
+			{linkTransforms.map((matrix, i: number) => (
+				<RevoluteJoint key={i} transform={matrix}/>
+			))}
 		</group>
 	)
 }

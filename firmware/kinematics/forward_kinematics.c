@@ -1,6 +1,5 @@
 #include "forward_kinematics.h"
 #include <err.h>
-#include <iterator>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -105,25 +104,25 @@ void compute_rotation_matrix(double degZ, double degY, double degX, double z, do
 }
 
 void compute_DH_transform(double r, double alpha, double d, double theta, double *res_mat) {
-    m[0] = cos(theta);
-    m[1] = -sin(theta) * cos(alpha);
-    m[2] = sin(theta) * sin(alpha);
-    m[3] = r * cos(theta);
+    res_mat[0] = cos(theta);
+    res_mat[1] = -sin(theta) * cos(alpha);
+    res_mat[2] = sin(theta) * sin(alpha);
+    res_mat[3] = r * cos(theta);
 
-    m[4] = sin(theta);
-    m[5] = cos(theta) * cos(alpha);
-    m[6] = -cos(theta) * sin(alpha);
-    m[7] = r * sin(theta);
+    res_mat[4] = sin(theta);
+    res_mat[5] = cos(theta) * cos(alpha);
+    res_mat[6] = -cos(theta) * sin(alpha);
+    res_mat[7] = r * sin(theta);
 
-    m[8] = 0;
-    m[9] = sin(alpha);
-    m[10] = cos(alpha);
-    m[11] = d;
+    res_mat[8] = 0;
+    res_mat[9] = sin(alpha);
+    res_mat[10] = cos(alpha);
+    res_mat[11] = d;
 
-    m[12] = 0;
-    m[13] = 0;
-    m[14] = 0;
-    m[15] = 1;
+    res_mat[12] = 0;
+    res_mat[13] = 0;
+    res_mat[14] = 0;
+    res_mat[15] = 1;
 }
 
 void compute_FK(Vector3 positions[7], const double *dh_params, double *link_transforms, double res_mat[16]) {
