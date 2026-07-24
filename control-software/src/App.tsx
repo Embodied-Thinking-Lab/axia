@@ -122,7 +122,7 @@ function App() {
 
 	function updateDH() {
 		setDHParams(
-			dhParams.map((row) =>
+			visualDHParams.map((row) =>
 				row.map((cell, j) =>
 					j === 1 || j === 2
 						? degToRad(cell)
