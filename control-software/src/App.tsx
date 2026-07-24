@@ -9,7 +9,7 @@ import { JointConstraints, Vector3 } from "./props"
 
 
 function App() {
-	
+
 
 	// type declerations
 	// positions[7]
@@ -28,7 +28,7 @@ function App() {
 	const [tiVector, setTIVector] = useState<Vector3>({ x:0, y:0, z:90 });
 	const axes = Object.keys(tiVector) as Array<keyof Vector3>;
 	const [fkMatrix, setFkMatrix] = useState<number[]>([]);
-	const [dhParams, setDHParams] = useState([	
+	const [dhParams, setDHParams] = useState([
 		[0, degToRad(0), 87, degToRad(jointAngles[0])],
     	[0, degToRad(90), 97, degToRad(jointAngles[1])],
     	[280, degToRad(0), 0, degToRad(jointAngles[2] + 90)],
@@ -37,14 +37,14 @@ function App() {
     	[0, degToRad(90), 70, degToRad(jointAngles[5] - 90)]
 	])
 
-	// const DHParams = useMemo(() => [
-    	// [0, degToRad(0), 87, degToRad(jointAngles[0])],
-    	// [0, degToRad(90), 97, degToRad(jointAngles[1])],
-    	// [280, degToRad(0), 0, degToRad(jointAngles[2] + 90)],
-    	// [0, degToRad(-90), 25.5, degToRad(jointAngles[3])],
-    	// [0, degToRad(-90), 220.5, degToRad(jointAngles[4])],
-    	// [0, degToRad(90), 70, degToRad(jointAngles[5] - 90)],
-	// ], [jointAngles]);
+	const [visualDHParams, setVisualDHParams] = useState([
+		[0, 0, 87, jointAngles[0]],
+    	[0, 90, 97, jointAngles[1]],
+    	[280, 0, 0, jointAngles[2] + 90],
+    	[0, -90, 25.5, jointAngles[3]],
+    	[0, -90, 220.5, jointAngles[4]],
+    	[0, 90, 70, jointAngles[5] - 90]
+	])
 
 	const defaultPositions = useMemo(() => [
 	  	{ x: 0, y: 0, z: 0 },
@@ -64,7 +64,6 @@ function App() {
 		{min: -180, max: 180},
 	]
 
-
 	const updateFK = useCallback(async (currentPositions = defaultPositions, currentTI = tiVector, currentDHParams = dhParams) => {
 		try {
 			console.log(JSON.stringify(currentPositions));
@@ -75,7 +74,7 @@ function App() {
 			});
 
 			setFkMatrix(resMat);
-	
+
 			console.log("C FK OUTPUT (4x4):");
 			for (let i = 0; i < 4; i++) {
 				const row = resMat
@@ -89,17 +88,15 @@ function App() {
 		}
 	}, [defaultPositions, tiVector, dhParams])
 
-
 	useEffect(() => {
 		updateFK(defaultPositions, tiVector, dhParams);
 	}, [tiVector, dhParams]);
-
 
 	function updateTIVector(axis: keyof Vector3, val: number) {
 		setTIVector((prev) => ({ ...prev, [axis]: val}));
 	}
 
-	async function updateJoint(jointId: number, angle: number) {	
+	async function updateJoint(jointId: number, angle: number) {
 		try {
 			const returnAngle = await invoke<number>("set_joint", { jointId, angle});
 			updateFK();
@@ -107,15 +104,14 @@ function App() {
 				const updated = [...prevJointAngles];
 				updated[jointId-1] = returnAngle;
 				return updated;
-			})	
+			})
 		} catch(err) {
 			console.error("Failed to move joint:", err);
 		}
 	}
 
-	const updateDH = (row: number, col: number, value: number) => {
-		if (col == 1 || col == 2) value = degToRad(value);
-    	setDHParams(prev =>
+	const updateVisualDH = (row: number, col: number, value: number) => {
+    	setVisualDHParams(prev =>
         	prev.map((r, i) =>
             	i === row
                 ? r.map((v, j) => (j === col ? value : v))
@@ -123,6 +119,18 @@ function App() {
         	)
     	);
 	};
+
+	function updateDH() {
+		setDHParams(
+			dhParams.map((row) =>
+				row.map((cell, j) =>
+					j === 1 || j === 2
+						? degToRad(cell)
+						: cell
+				)
+			)
+		)
+	}
 
 	const homeJoints = async () => {
 		const homed = [0, 0, 0, 0, 0, 0];
@@ -139,21 +147,21 @@ function App() {
 			<div className="flex gap-1 flex-col w-max">
 
 
-				Tool Interface Vector:	
-				<div className="w-[5rem] flex flex-row gap-2"> 	
+				Tool Interface Vector:
+				<div className="w-[5rem] flex flex-row gap-2">
 					{axes.map((axis) => (
 						<AxisInput
 							label={`${axis.toUpperCase()}:`}
-							key={axis}	
+							key={axis}
 							type={axis}
 							value={tiVector[axis]}
-							onChange={updateTIVector} 
+							onChange={updateTIVector}
 						/>
 					))}
-					
+
 				</div>
 
-		
+
 				Joint Jogging:
 				<div>
 					{[1, 2, 3, 4, 5, 6].map((id) => (
@@ -169,12 +177,12 @@ function App() {
 						/>
 					))}
 				</div>
-			
-				<button 
-					type="button" 
+
+				<button
+					type="button"
 					className="
-					text-red-700 bg-neutral-primary border hover:border-red-700 
-					hover:bg-red-700 hover:text-white rounded-sm font-medium leading-5 
+					text-red-700 bg-neutral-primary border hover:border-red-700
+					hover:bg-red-700 hover:text-white rounded-sm font-medium leading-5
 					rounded-base text-sm px-3 py-2 focus:outline-none cursor-pointer
 					w-max
 					"
@@ -183,22 +191,22 @@ function App() {
 					}}
 				>
 						HOME JOINTS
-				</button>	
+				</button>
 
 				Denavit-Hartenberg Parameters
 				<div className="grid grid-cols-4">
-				{dhParams.map((row, i) => (
+				{visualDHParams.map((row, i) => (
 					row.map((value, j) => (
-					<DHInputField 
+					<DHInputField
 						key={j}
 						styling={"w-[4rem] border border-gray-800 rounded-sm px-1"}
 						row={i}
 						col={j}
 						value={value}
-						onChange={updateDH}
-					/>	
+						onChange={updateVisualDH}
+					/>
 					))
-				))}	
+				))}
 				</div>
 
 			</div>
