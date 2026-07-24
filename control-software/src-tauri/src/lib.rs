@@ -23,10 +23,10 @@ extern "C" {
 
 #[tauri::command]
 async fn calculate_fk(
-	mut positions: [Vector3; 7],
+	mut positions: [Vector3; 6],
 	dh_params: [[f64; 4]; 6],
 	ti_vector: Vector3,
-) -> Result<([Vector3; 7], [[f64; 16]; 6], [f64; 16]), String> {
+) -> Result<([Vector3; 6], [[f64; 16]; 6], [f64; 16]), String> {
 	let mut link_transforms = [[0.0f64; 16]; 6];
     let mut end_effector = [0.0f64; 16];
 

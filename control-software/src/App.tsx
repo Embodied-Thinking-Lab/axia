@@ -65,7 +65,6 @@ function App() {
 	  	{ x: 0, y: 0, z: 0 },
 	  	{ x: 0, y: 0, z: 0 },
 	  	{ x: 0, y: 0, z: 0 },
-	  	{ x: 0, y: 0, z: 0 },
 	], [])
 	const jointConstraints: JointConstraints[] = [
 		{min: -180, max: 180},
@@ -145,7 +144,6 @@ function App() {
         updateFK(homed, tiVector);
 	}
 
-	const pos: [number, number, number] = [endEffector[3], endEffector[7], endEffector[11]]
 
 	return (
 		<main className="flex gap-1 flex-row w-100vw h-100vh">
@@ -163,11 +161,8 @@ function App() {
 							<cylinderGeometry args={[10, 10, 20, 32]}/>
 							<meshStandardMaterial color="gray" />
 						</mesh>
-						<DHViewer linkTransforms={linkTransformations} />
-						<mesh position={pos}>
-							<sphereGeometry args={[10, 10, 20]}/>
-							<meshStandardMaterial color="red" />
-						</mesh>
+						<DHViewer linkTransforms={linkTransformations} positions={positions} endEffector={endEffector} toolInterface={tiVector} />
+
 					</group>
 
 				    <OrbitControls target={[0, 0, 230]} />

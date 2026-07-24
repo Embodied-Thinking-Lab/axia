@@ -1,7 +1,14 @@
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { Link } from "./Link";
 
-export function RevoluteJoint({transform}) {
+interface Props {
+	transform: number[];
+	start: [number, number, number];
+	end: [number, number, number];
+}
+
+export function RevoluteJoint({transform, start, end}: Props) {
 	const matrix = useMemo(() => {
 		const m = new THREE.Matrix4();
 		m.fromArray(transform);
@@ -16,12 +23,17 @@ export function RevoluteJoint({transform}) {
 		return m;
 	}, [transform])
 
+
 	return (
-		<group matrix={matrix} matrixAutoUpdate={false}>
-			<mesh rotation={[Math.PI / 2, 0, 0]}>
-				<cylinderGeometry args={[10, 10, 20, 32]}/>
-				<meshStandardMaterial color="gray" />
-			</mesh>
-		</group>
+		<>
+			<group matrix={matrix} matrixAutoUpdate={false}>
+				<mesh rotation={[Math.PI/2, 0,0]}>
+					<cylinderGeometry args={[10, 10, 20, 32]}/>
+					<meshStandardMaterial color="gray" />
+				</mesh>
+
+			</group>
+			<Link a={start} b={end} />
+		</>
 	)
 }

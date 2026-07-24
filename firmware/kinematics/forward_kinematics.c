@@ -125,7 +125,7 @@ void compute_DH_transform(double r, double alpha, double d, double theta, double
     res_mat[15] = 1;
 }
 
-void compute_FK(Vector3 positions[7], const double *dh_params, double *link_transforms, double res_mat[16]) {
+void compute_FK(Vector3 positions[6], const double *dh_params, double *link_transforms, double res_mat[16]) {
     double current[16] = {
     	1, 0, 0, 0,
      	0, 1, 0, 0,
