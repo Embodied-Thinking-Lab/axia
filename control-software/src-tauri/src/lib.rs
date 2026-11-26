@@ -1,5 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
+use std::sync::PoisonError;
+
 #[repr(C)]
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub struct Vector3 {
@@ -8,19 +10,41 @@ pub struct Vector3 {
     pub z: f64,
 }
 
+
 extern "C" {
-    fn compute_FK_ffi(positions: *const Vector3, ti_vector: Vector3, dh_params: *const [f64; 4], out_matrix_16: *mut f64);
+    fn compute_FK_FFI(
+        positions: *mut Vector3,
+        ti_vector: Vector3,
+        dh_params: *const f64,
+        link_transforms: *mut f64,
+        end_effector: *mut f64,
+    );
 }
 
 #[tauri::command]
-async fn calculate_fk(positions: [Vector3; 7], dh_params: [[f64; 4]; 6], ti_vector: Vector3) -> Result<[f64; 16], String> {
-    let mut out_matrix = [0.0f64; 16];
+async fn calculate_fk(
+	mut positions: [Vector3; 6],
+	dh_params: [[f64; 4]; 6],
+	ti_vector: Vector3,
+) -> Result<([Vector3; 6], [[f64; 16]; 6], [f64; 16]), String> {
+	let mut link_transforms = [[0.0f64; 16]; 6];
+    let mut end_effector = [0.0f64; 16];
 
     unsafe {
-        compute_FK_ffi(positions.as_ptr(), ti_vector, dh_params.as_ptr(), out_matrix.as_mut_ptr());
+        compute_FK_FFI(
+        	positions.as_mut_ptr(),
+         	ti_vector,
+          	dh_params.as_ptr() as *const f64,
+          	link_transforms.as_ptr() as *mut f64,
+          	end_effector.as_mut_ptr(),
+        );
     }
 
-    Ok(out_matrix)
+    Ok((
+  		positions,
+    	link_transforms,
+     	end_effector,
+    ))
 }
 
 #[tauri::command]
