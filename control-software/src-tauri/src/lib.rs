@@ -16,6 +16,7 @@ extern "C" {
         positions: *mut Vector3,
         ti_vector: Vector3,
         dh_params: *const f64,
+        joint_transforms: *mut f64,
         link_transforms: *mut f64,
         end_effector: *mut f64,
     );
@@ -23,10 +24,12 @@ extern "C" {
 
 #[tauri::command]
 async fn calculate_fk(
-	mut positions: [Vector3; 6],
+	mut positions: [Vector3; 8],
 	dh_params: [[f64; 4]; 6],
 	ti_vector: Vector3,
-) -> Result<([Vector3; 6], [[f64; 16]; 6], [f64; 16]), String> {
+) -> Result<([Vector3; 8], [[f64; 16]; 6], [[f64; 16]; 6], [f64; 16]), String> {
+
+	let mut joint_transforms = [[0.0f64; 16]; 6];
 	let mut link_transforms = [[0.0f64; 16]; 6];
     let mut end_effector = [0.0f64; 16];
 
@@ -35,13 +38,15 @@ async fn calculate_fk(
         	positions.as_mut_ptr(),
          	ti_vector,
           	dh_params.as_ptr() as *const f64,
-          	link_transforms.as_ptr() as *mut f64,
+            joint_transforms.as_mut_ptr() as *mut f64,
+          	link_transforms.as_mut_ptr() as *mut f64,
           	end_effector.as_mut_ptr(),
         );
     }
 
     Ok((
   		positions,
+    	joint_transforms,
     	link_transforms,
      	end_effector,
     ))
