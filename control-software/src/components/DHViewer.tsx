@@ -1,32 +1,59 @@
 import { RevoluteJoint } from "./RevoluteJoint"
+import { Link } from "./Link";
+import { useRef } from "react";
 
-export function DHViewer({ linkTransforms, positions, endEffector, toolInterface}) {
+export function DHViewer({ jointTransforms, positions}) {
+	const logged = useRef(false);
+	const identity = [
+	    1,0,0,0,
+	    0,1,0,0,
+	    0,0,1,0,
+	    0,0,0,1
+	];
 
-	const eePos: [number, number, number] = [endEffector[3], endEffector[7], endEffector[11]];
+	if (!logged.current) {
+		logged.current = true;
+
+		jointTransforms.forEach((m, i) => {
+		    console.log(
+		        "joint",
+		        i,
+		        "translation",
+		        [m[3], m[7], m[11]]
+		    );
+		});
+
+	}
+
 	return (
 		<group>
-			<RevoluteJoint
-				transform={[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
-				start={[0, 0, 0]}
-				end={[positions[1].x, positions[1].y, positions[1].z]}
-			/>
-			{linkTransforms.map((matrix, i: number) => {
-				const nextPos = positions[i + 1];
-				const currentPos = positions[i];
-				return (
-					<RevoluteJoint
-						key={i}
-						transform={matrix}
-						start={[currentPos.x, currentPos.y, currentPos.z]}
-						end={[
-							nextPos ? nextPos.x : currentPos.x,
-							nextPos ? nextPos.y : currentPos.y,
-							nextPos ? nextPos.z : currentPos.z - toolInterface.z,
-						]}
-					/>
-				)
-			})}
-			<mesh position={eePos}>
+			{jointTransforms.map((matrix, i) => (
+				<RevoluteJoint
+			        key={i}
+			        transform={matrix}
+			    />
+			))}
+
+			{positions.slice(0, -1).map((_, i) => (
+			    <Link
+			        key={i}
+			        a={[
+			            positions[i].x,
+			            positions[i].y,
+			            positions[i].z
+			        ]}
+			        b={[
+			            positions[i + 1].x,
+			            positions[i + 1].y,
+			            positions[i + 1].z
+			        ]}
+			    />
+			))}
+			<mesh position={[
+				positions[7].x,
+				positions[7].y,
+				positions[7].z,
+			]}>
 				<sphereGeometry args={[10, 10, 20]}/>
 				<meshStandardMaterial color="red" />
 			</mesh>
